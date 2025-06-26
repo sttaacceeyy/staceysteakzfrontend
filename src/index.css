@@ -1,0 +1,81 @@
+/* Add your global styles here */
+body {
+  margin: 0;
+  font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  background: #18120e;
+  color: #f5f3ef;
+  min-height: 100vh;
+}
+
+a {
+  color: #e0b07d;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+a:hover {
+  color: #fff;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #e0b07d;
+  margin-top: 0;
+}
+
+nav {
+  background: #1a1410;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  padding: 0.5rem 0;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+}
+
+button, .btn {
+  background: #e0b07d;
+  color: #18120e;
+  border: none;
+  border-radius: 2px;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+button:hover, .btn:hover {
+  background: #fff;
+  color: #18120e;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.card {
+  background: #221a15;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+input, select, textarea {
+  background: #2a211b;
+  color: #f5f3ef;
+  border: 1px solid #3a2c22;
+  border-radius: 2px;
+  padding: 0.5rem;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #e0b07d;
+}
