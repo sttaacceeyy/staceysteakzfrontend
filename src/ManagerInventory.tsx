@@ -1,18 +1,78 @@
 import React, { useEffect, useState } from 'react';
 
-const INVENTORY_KEY = 'sharedInventory';
-const defaultInventory = [
-  { id: 1, name: 'Beef', quantity: 10, unit: 'kg', low: false },
-  { id: 2, name: 'Lettuce', quantity: 2, unit: 'kg', low: true },
-];
-function getInventory() {
-  const data = localStorage.getItem(INVENTORY_KEY);
-  return data ? JSON.parse(data) : defaultInventory;
+const INVENTORY_KEY = 'sharedInventoryByBranch';
+function getInventoryCurrentBranch() {
+  const user = localStorage.getItem('currentUser');
+  if (!user) return null;
+  try {
+    const parsed = JSON.parse(user);
+    if (parsed.role === 'admin') {
+      const adminBranch = localStorage.getItem('adminSelectedBranch');
+      return adminBranch || null;
+    }
+    return parsed.branch || null;
+  } catch {
+    return null;
+  }
 }
+function getInventory() {
+  const branch = getInventoryCurrentBranch();
+  if (!branch) return [];
+  const data = localStorage.getItem(INVENTORY_KEY);
+  if (!data) return [];
+  const allInventories = JSON.parse(data);
+  return allInventories[branch] || [];
+}
+
 const ManagerInventory: React.FC = () => {
-  const [inventory, setInventory] = useState<any[]>(getInventory());
+  const [inventory, setInventoryState] = useState<any[]>(getInventory());
+  const [adminBranch, setAdminBranch] = useState<string | null>(null);
+
+  // Fetch all branches for admin dropdown
+  const [branches, setBranches] = useState<string[]>([]);
   useEffect(() => {
-    const sync = () => setInventory(getInventory());
+    const branchesData = localStorage.getItem('branches');
+    if (branchesData) {
+      setBranches(JSON.parse(branchesData));
+    }
+  }, []);
+
+  // If admin, allow branch selection
+  useEffect(() => {
+    const user = localStorage.getItem('currentUser');
+    if (user && JSON.parse(user).role === 'admin') {
+      const selected = localStorage.getItem('adminSelectedBranch');
+      setAdminBranch(selected || (branches[0] || null));
+    }
+  }, [branches]);
+
+  // Always show branch selector and reload inventory when branch changes (for both admin and manager)
+  useEffect(() => {
+    let user = localStorage.getItem('currentUser');
+    let role = user ? JSON.parse(user).role : null;
+    let selected = adminBranch;
+    if (role === 'admin') {
+      selected = localStorage.getItem('adminSelectedBranch');
+      if (!selected && branches.length > 0) {
+        selected = branches[0];
+        localStorage.setItem('adminSelectedBranch', selected);
+      }
+      setAdminBranch(selected || (branches[0] || null));
+      setInventoryState(getInventory());
+    } else if (role === 'manager') {
+      setInventoryState(getInventory());
+    }
+  }, [branches, adminBranch]);
+
+  // When branch is changed (admin), update localStorage and reload inventory
+  const handleAdminBranchChange = (branch: string) => {
+    localStorage.setItem('adminSelectedBranch', branch);
+    setAdminBranch(branch);
+    setInventoryState(getInventory());
+  };
+
+  useEffect(() => {
+    const sync = () => setInventoryState(getInventory());
     window.addEventListener('storage', sync);
     const interval = setInterval(sync, 1000);
     return () => {
@@ -22,7 +82,18 @@ const ManagerInventory: React.FC = () => {
   }, []);
   return (
     <div className="container mx-auto p-4 max-w-3xl">
-      <h1 className="text-2xl font-bold mb-4">Inventory</h1>
+      <h1 className="text-2xl font-bold mb-4">Inventory Overview</h1>
+      {/* Branch selector for both admin and manager */}
+      <div className="mb-4">
+        <label className="mr-2 font-semibold">Select Branch:</label>
+        <select
+          className="border p-2 rounded"
+          value={adminBranch || branches[0] || ''}
+          onChange={e => handleAdminBranchChange(e.target.value)}
+        >
+          {branches.map(b => <option key={b} value={b}>{b}</option>)}
+        </select>
+      </div>
       <table className="w-full text-left border mb-2">
         <thead>
           <tr className="bg-gray-100">
@@ -44,7 +115,7 @@ const ManagerInventory: React.FC = () => {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table    >
     </div>
   );
 };

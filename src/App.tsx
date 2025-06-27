@@ -32,6 +32,7 @@ import HQManagerReservations from './HQManagerReservations';
 import HQManagerSales from './HQManagerSales';
 import ChefOrders from './ChefOrders';
 import ChefOrderHistory from './ChefOrderHistory';
+import PaymentProcessing from './PaymentProcessing';
 
 function App() {
   // HQ manager redirect logic
@@ -93,6 +94,7 @@ function App() {
           <Route path="/hqmanager-sales" component={HQManagerSales} />
           <Route path="/chef-orders" component={ChefOrders} />
           <Route path="/chef-order-history" component={ChefOrderHistory} />
+          <Route path="/cashier-payment" component={PaymentProcessing} />
           <Route component={NotFound} />
         </Switch>
       </div>

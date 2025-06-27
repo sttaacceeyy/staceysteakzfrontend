@@ -30,8 +30,10 @@ const Navbar: React.FC = () => {
     window.location.href = '/'; // Force redirect to home after logout
   };
 
+  const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+
   return (
-    <nav>
+    <nav className="bg-gray-800 text-white p-4">
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -94,6 +96,12 @@ const Navbar: React.FC = () => {
           {isAdmin && <li><Link to="/inventory-management" style={{ color: '#e0b07d', textDecoration: 'none' }}>Inventory Management</Link></li>}
           {isCashier && <li><Link to="/order-management" style={{ color: '#e0b07d', textDecoration: 'none' }}>Order Management</Link></li>}
           {isCashier && <li><Link to="/payment-history" style={{ color: '#e0b07d', textDecoration: 'none' }}>Payment History</Link></li>}
+          {/* Show Payment Processing link robustly for any cashier role variant */}
+          {(isCashier || (user && user.role && ['cashier','waiter_cashier','waiter_cashier','waiter-cashier','waiter cashier'].includes(user.role.toLowerCase()))) && (
+            <li>
+              <Link to="/cashier-payment" className="hover:underline">Payment Processing</Link>
+            </li>
+          )}
           {!role && <li><Link to="/signup" style={{ color: '#e0b07d', textDecoration: 'none' }}>Sign Up</Link></li>}
           {!role && <li><Link to="/login" style={{ color: '#e0b07d', textDecoration: 'none' }}>Log In</Link></li>}
           {role && (

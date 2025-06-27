@@ -1,16 +1,36 @@
 import React, { useEffect, useState } from 'react';
 
-const MENU_KEY = 'sharedMenu';
-const defaultMenu = [
-  { id: 1, name: 'Ribeye Steak', category: 'Mains', price: 32 },
-  { id: 2, name: 'Caesar Salad', category: 'Appetizers', price: 12 },
-];
+const MENU_KEY = 'sharedMenuByBranch';
+function getCurrentBranch() {
+  const user = localStorage.getItem('currentUser');
+  if (!user) return null;
+  try {
+    const parsed = JSON.parse(user);
+    // If admin, allow branch selection via a dropdown (see below)
+    if (parsed.role === 'admin') {
+      const adminBranch = localStorage.getItem('adminSelectedBranch');
+      return adminBranch || null;
+    }
+    return parsed.branch || null;
+  } catch {
+    return null;
+  }
+}
 function getMenu() {
+  const branch = getCurrentBranch();
+  if (!branch) return [];
   const data = localStorage.getItem(MENU_KEY);
-  return data ? JSON.parse(data) : defaultMenu;
+  if (!data) return [];
+  const allMenus = JSON.parse(data);
+  return allMenus[branch] || [];
 }
 function setMenu(data: any[]) {
-  localStorage.setItem(MENU_KEY, JSON.stringify(data));
+  const branch = getCurrentBranch();
+  if (!branch) return;
+  const allMenus = localStorage.getItem(MENU_KEY);
+  let menus = allMenus ? JSON.parse(allMenus) : {};
+  menus[branch] = data;
+  localStorage.setItem(MENU_KEY, JSON.stringify(menus));
 }
 const categories = ['Appetizers', 'Mains', 'Desserts', 'Drinks'];
 
@@ -19,6 +39,42 @@ const ManagerMenu: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editItem, setEditItem] = useState<any>(null);
   const [newItem, setNewItem] = useState({ name: '', category: categories[0], price: '' });
+  const [adminBranch, setAdminBranch] = useState<string | null>(null);
+
+  // Fetch all branches for admin dropdown
+  const [branches, setBranches] = useState<string[]>([]);
+  useEffect(() => {
+    const branchesData = localStorage.getItem('branches');
+    if (branchesData) {
+      setBranches(JSON.parse(branchesData));
+    }
+  }, []);
+
+  // Always show branch selector and reload menu when branch changes (for both admin and manager)
+  useEffect(() => {
+    let user = localStorage.getItem('currentUser');
+    let role = user ? JSON.parse(user).role : null;
+    let selected = adminBranch;
+    if (role === 'admin') {
+      selected = localStorage.getItem('adminSelectedBranch');
+      if (!selected && branches.length > 0) {
+        selected = branches[0];
+        localStorage.setItem('adminSelectedBranch', selected);
+      }
+      setAdminBranch(selected || (branches[0] || null));
+      setMenuState(getMenu());
+    } else if (role === 'manager') {
+      // For manager, branch is fixed, but reload menu if branch changes
+      setMenuState(getMenu());
+    }
+  }, [branches, adminBranch]);
+
+  // When branch is changed (admin), update localStorage and reload menu
+  const handleAdminBranchChange = (branch: string) => {
+    localStorage.setItem('adminSelectedBranch', branch);
+    setAdminBranch(branch);
+    setMenuState(getMenu());
+  };
 
   useEffect(() => {
     const sync = () => setMenuState(getMenu());
@@ -60,7 +116,18 @@ const ManagerMenu: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">
-      <h1 className="text-2xl font-bold mb-4">Menu Overview (Manager)</h1>
+      <h1 className="text-2xl font-bold mb-4">Menu Overview</h1>
+      {/* Branch selector for both admin and manager */}
+      <div className="mb-4">
+        <label className="mr-2 font-semibold">Select Branch:</label>
+        <select
+          className="border p-2 rounded"
+          value={adminBranch || branches[0] || ''}
+          onChange={e => handleAdminBranchChange(e.target.value)}
+        >
+          {branches.map(b => <option key={b} value={b}>{b}</option>)}
+        </select>
+      </div>
       <form onSubmit={handleAdd} className="flex flex-col md:flex-row gap-2 mb-6 items-end">
         <input className="border p-2 rounded flex-1" placeholder="Name" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} />
         <select className="border p-2 rounded" value={newItem.category} onChange={e => setNewItem({ ...newItem, category: e.target.value })}>
